@@ -1,0 +1,9 @@
+@import url("https://fonts.googleapis.com/css2?family=Source+Sans+3&display=swap");
+
+nav {
+  font-family: "Source Sans 3", sans-serif;
+}
+
+.vercel-dark {
+  background-color: #000101;
+}
