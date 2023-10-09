@@ -31,17 +31,20 @@ app.post("/api/register", (req, res) => __awaiter(void 0, void 0, void 0, functi
         return res.status(404).send("either username or password is missing");
     }
     try {
-        // const existing_user = await prisma.users.findUnique({
-        //   where:{
-        //     username:uname,
-        //     email:email
-        //   }
-        // })
+        const existing_user = yield prisma.users.findFirst({
+            where: {
+                username: uname,
+                email: email,
+            },
+        });
+        if (existing_user) {
+            return res.status(404).send("user already exists");
+        }
         const new_user = yield prisma.users.create({
             data: {
                 username: uname,
                 email: email,
-                password: (0, password_1.encryptPassword)(password),
+                password: yield (0, password_1.hashPassword)(password),
             },
         });
         const { id, created_at, username } = new_user;
@@ -53,6 +56,29 @@ app.post("/api/register", (req, res) => __awaiter(void 0, void 0, void 0, functi
     }
     catch (e) {
         console.error(e);
+    }
+}));
+app.post("/api/login", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { email, password } = req.body;
+    if (!password || !email) {
+        return res.status(404).send("either username or password is missing");
+    }
+    try {
+        const existing_user = yield prisma.users.findFirst({
+            where: {
+                email: email,
+            },
+        });
+        if (yield (0, password_1.comparePasswords)(password, existing_user.password)) {
+            const token = (0, password_1.generatetoken)(existing_user.id, existing_user.email, existing_user.username);
+            return res.status(200).send({ token: token });
+        }
+        else {
+            return res.status(401).send({ error: "incorrect password" });
+        }
+    }
+    catch (e) {
+        console.log(e);
     }
 }));
 app.listen(port, () => {
